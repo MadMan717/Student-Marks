@@ -143,8 +143,6 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
-
-      {/* HEADER */}
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex h-[86px] max-w-[2000px] items-center justify-between px-5">
 
