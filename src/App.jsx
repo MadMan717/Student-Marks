@@ -415,8 +415,6 @@ function TableHeader({ children }) {
 }
 
 
-/* TABLE CELL */
-
 function TableCell({ children }) {
   return (
     <td className="px-5 py-5 text-center text-[15px]">
@@ -435,18 +433,28 @@ function StudentsPage({students,setStudents,setActivePage,setCurrentStudent}) {
 
 
 
-function AddStudent(){
-  const newStudent={name:name,email:email,rollNo:rollNo,grade: grade};
-  fetch("http://localhost:5000/update-students", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(newStudent)
-});
 
-  setShowAddStudent(false);
+function AddStudent() {
+  const newStudent = {
+    name: name,
+    email: email,
+    rollNo: rollNo,
+    grade: grade
+  };
+
+  fetch("http://localhost:5000/update-students", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(newStudent)
+  })
+    .then(res => res.json())
+    .then(data => {setStudents(prevStudents => [...prevStudents, data]);
+      setShowAddStudent(false);
+    });
 }
+
     return (
       <section>
         <div className="mb-9 flex items-start justify-between">
@@ -685,26 +693,19 @@ function AddStudent(){
 
   }
 function UpdateMarksPage({currentStudent,setCurrentStudent,setStudents,setActivePage}) {
-  function UpdateMarks(){
-
-  fetch(`http://localhost:5000/students/${currentStudent.rollNo}`, {
+ function UpdateMarks() {
+  fetch("http://localhost:5000/update-marks", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify(currentStudent)
   })
-  .then(res => res.json())
-  .then(data => {
-    setStudents(prevStudents =>
-      prevStudents.map(student =>
-        student.rollNo === data.rollNo ? data : student
-      )
-    );
-
-    setActivePage("students");
-  });
-
+    .then(res => res.json())
+    .then(data => {
+      setStudents(data);
+      setActivePage("students");
+    });
 }
 
   return (
@@ -860,11 +861,7 @@ function EditProfile({currentStudent,setCurrentStudent,setStudents,setActivePage
   })
   .then(res => res.json())
   .then(data => {
-    setStudents(prevStudents =>
-      prevStudents.map(student =>
-        student.rollNo === data.rollNo ? data : student
-      )
-    );
+    setStudents(data);
     setActivePage("students");
   });
   }
@@ -905,7 +902,7 @@ function EditProfile({currentStudent,setCurrentStudent,setStudents,setActivePage
                     <input
                       type="email"
                       placeholder="student@school.com"
-                      value={`${currentStudent.name.toLowerCase().replaceAll(" ", ".")}@school.com`}
+                      value={currentStudent.email}
                       onChange={(e)=>setCurrentStudent(prev=>({...prev, email:e.target.value}))}
                       className="w-full rounded-xl border border-slate-200 px-6 py-5 text-[18px] outline-none focus:border-gray-400"
                     />
@@ -977,22 +974,18 @@ function EditProfile({currentStudent,setCurrentStudent,setStudents,setActivePage
 
 function DeleteStudent({currentStudent,setStudents,setActivePage }) {
 
-function Delete(student){
+function Delete(){
      fetch("http://localhost:5000/delete-student", {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(student)
+    body: JSON.stringify(currentStudent)
   })
   .then(res => res.json())
-  .then(data => {
-    setStudents(prevStudents =>
-      prevStudents.filter(s => s.rollNo !== student.rollNo)
-    );
-  });
-
-    setActivePage("students");
+  .then(data =>{
+    setStudents(data);
+    setActivePage("students")});
 }
 return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -1015,7 +1008,7 @@ return (
           </button>
 
           <button
-            onClick={() => Delete(currentStudent)}
+            onClick={() => Delete()}
             className="flex-1 rounded-xl bg-red-600 px-6 py-4 text-[18px] text-white shadow-sm transition hover:bg-red-700">
             Delete Student
           </button>

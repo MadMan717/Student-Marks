@@ -48,25 +48,25 @@ app.post("/update-students", (req, res)=> {
   return res.json(newStudent);
 });
 
-app.put("/students/:rollNo", (req, res) => {
-  const rollNo = req.params.rollNo;
-  const updatedStudent = req.body;
-  students = students.map(student =>student.rollNo === rollNo ? updatedStudent : student);
-  res.json(updatedStudent);
+app.put("/update-marks", (req, res) => {
+  const updatedmarks=req.body;
+  const rollNo=updatedmarks.rollNo;
+  students = students.map(student =>student.rollNo === rollNo ? updatedmarks : student);
+  res.json(students);
 });
 
 app.put("/edit-student",(req, res) => {
   const updatedStudent= req.body;
   const RollNoStudent=updatedStudent.rollNo;
-  console.log(RollNoStudent);
   students = students.map(student => student.rollNo === RollNoStudent ? updatedStudent : student);
-  console.log(students);
   res.json(students);
 });
 
 app.delete("/delete-student", (req, res) => {
-  const rollNo = req.body.rollNo;
-  students = students.filter(student =>student.rollNo !== rollNo);
+  const updatedstudents = req.body;
+  const rollNo=updatedstudents.rollNo;
+  students = students.filter(student=>student.rollNo !== rollNo);
+  res.json(students);
 });
 
 app.listen(5000, () => {
