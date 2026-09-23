@@ -24,7 +24,6 @@ app.use(cors());
 
 app.get("/students", async (req, res) => {
   const students=await Student.find();
-  console.log(students);
   res.json(students);
 });
 
