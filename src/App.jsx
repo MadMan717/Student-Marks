@@ -442,7 +442,7 @@ function AddStudent() {
     grade: grade
   };
 
-  fetch("http://localhost:5000/update-students", {
+  fetch("http://localhost:5000/add-students", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
