@@ -1,5 +1,5 @@
 import { useState,useEffect} from "react";
-
+import Login from "./login.jsx";
 import {
   GraduationCap,
   LogOut,
@@ -108,8 +108,10 @@ function getPerformer(students){
 
 
 function App() {
+const[user,setuser]=useState(false);
 const[students, setStudents] = useState([]);
-const[studentAdded,setStudentAdded]=useState(false);
+const [activePage, setActivePage] = useState("dashboard");
+const [currentStudent,setCurrentStudent]=useState();
 useEffect(() => {
   console.log(fetch("http://localhost:5000/students"));
   fetch("http://localhost:5000/students")
@@ -117,10 +119,17 @@ useEffect(() => {
     .then(data=>setStudents(data));
 },[]);
 
-
-
-  const [activePage, setActivePage] = useState("dashboard");
-  const [currentStudent,setCurrentStudent]=useState();
+function LoginCheck(username,password){
+  if(username==="admin"&&password==="admin"){
+    setuser(true);
+  }
+}
+if(!user){
+  return <Login LoginCheck={LoginCheck}/>;
+}
+function Logout() {
+  setuser(false);
+}
    let pageContent;
 
    if (activePage === "dashboard") {
@@ -162,7 +171,7 @@ useEffect(() => {
             </div>
           </div>
 
-          <button className="flex gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-[15px] font-medium text-white hover:bg-red-700">
+          <button className="flex gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-[15px] font-medium text-white hover:bg-red-700" onClick={Logout}>
             <LogOut size={18} />
             Logout
           </button>
