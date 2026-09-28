@@ -10,7 +10,5 @@ const studentSchema = new mongoose.Schema({
   social: Number,
   computer: Number
 });
-
 const Student = mongoose.model("Students", studentSchema);
-
 module.exports = Student;

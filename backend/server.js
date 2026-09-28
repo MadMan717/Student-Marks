@@ -7,20 +7,32 @@ dns.setServers([
   '8.8.8.8'
 ])
 require('dotenv').config();
-const mongoose = require('mongoose');
-const Student = require("./Student.js");
+const mongoose=require('mongoose');
+const Student=require("./Student.js");
+const Admin=require("./admin.js");
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.atlas_URL);
-    console.log('✅ MongoDB Atlas connected successfully via Mongoose!');
+    console.log('MongoDB Atlas connected successfully via Mongoose!');
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
-    process.exit(1); // Exit process with failure
+    console.error(' Database connection failed:', error.message);
+    process.exit(1);
   }
 };
 connectDB();
 app.use(express.json());
 app.use(cors());
+
+app.post("/login",async(req,res)=>{
+  const username=req.body.username;
+  const password=req.body.password;
+  const admin=await Admin.findOne({username:username});
+    if(admin.username===username && admin.password===password) {
+      res.json(true);
+    }else{
+      res.json(false);
+    }
+})
 
 app.get("/students", async (req, res) => {
   const students=await Student.find();

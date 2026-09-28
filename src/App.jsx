@@ -119,10 +119,23 @@ useEffect(() => {
     .then(data=>setStudents(data));
 },[]);
 
+
 function LoginCheck(username,password){
-  if(username==="admin"&&password==="admin"){
-    setuser(true);
-  }
+    fetch("http://localhost:5000/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      username:username,
+      password:password
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      setuser(data);
+    });
+
 }
 if(!user){
   return <Login LoginCheck={LoginCheck}/>;
@@ -133,7 +146,7 @@ function Logout() {
    let pageContent;
 
    if (activePage === "dashboard") {
-    pageContent = <DashBoardPage students={students} />;
+    pageContent = <DashBoardPage students={students} setActivePage={setActivePage} />;
   } else if (activePage === "students") {
     pageContent = <StudentsPage students={students} setStudents={setStudents} setActivePage={setActivePage} setCurrentStudent={setCurrentStudent} />;   
   } else if (activePage === "updatemarks") {
@@ -218,15 +231,15 @@ function Logout() {
   );
 }
 
-function DashBoardPage({students}){
+function DashBoardPage({students,setActivePage}){
   return(
     <>
             <div>
-              <h1 className="text-[35px]">Dashboard Overview</h1>
-              <p className="text-gray-500 text-[20px]">Monitor student performance and academic metrics</p>
+              <h1 className="text-[25px]">Dashboard Overview</h1>
+              <p className="text-gray-500 text-[17px] pt-2">Monitor student performance and academic metrics</p>
             </div>
 
-            <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <section className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 title="Total Students"
                 value={students.length}
@@ -256,19 +269,13 @@ function DashBoardPage({students}){
             </section>
             <section>
 
-              <div className="border-b border-gray-400 py-5">
-                <h1 className="text-[22px] font-medium ">
-                  Student Performance
-                </h1>
-
-                <p className="mt-2 text-[15px] text-gray-500">
-                  Comprehensive marks overview across all subjects
-                </p>
+              <div className="border-b border-gray-300 py-5 pl-7 ">
+                <h1 className="text-[22px] font-medium ">Student Performance</h1>
+                <p className="mt-2 text-[15px] text-gray-500">Comprehensive marks overview across all subjects</p>
               </div>
 
-              <div className="overflow-x-auto">
-
-                <table className="w-full min-w-[1000px] border-collapse">
+              <div className="overflow-x-auto  pr-15"> 
+                <table className= "w-full min-w-[1000px] border-collapse border-gray-300 ">
                   <thead>
                     <tr>
 
@@ -296,6 +303,7 @@ function DashBoardPage({students}){
                       return (
                         <tr
                           key={student.rollNo}
+                          className="hover:border-y hover:border-gray-300 hover:shadow-[0_2px_8px_rgba(0,0,0,0.15)"
                         >
 
                           <td className="px-7 py-5">
@@ -305,7 +313,7 @@ function DashBoardPage({students}){
                           </td>
 
 
-                          <td className="px-5 py-5">
+                          <td className="px-7 py-5">
                             <div>
 
                               <p className="font-medium">
@@ -328,7 +336,7 @@ function DashBoardPage({students}){
 
 
                           <td className="px-5 py-5 text-center">
-                            <span className="rounded-lg bg-slate-200 px-3 py-2 text-sm">
+                            <span className="hover:rounded-lg hover:bg-gray-300 px-3 py-2 text-sm">
                               {total}/500
                             </span>
                           </td>
@@ -364,8 +372,11 @@ function DashBoardPage({students}){
                 </table>
 
               </div>
-
             </section>
+            <div className="flex items-center justify-between">
+              <h1 className="pl-8 text-gray-500">Showing {students.length} students</h1>
+              <button   onClick={() => setActivePage("students")}  className="rounded-lg bg-black px-3 py-2 text-white text-[15px]" >Manage Student</button>
+            </div>
           </>
   );
 }
@@ -426,7 +437,7 @@ function TableHeader({ children }) {
 
 function TableCell({ children }) {
   return (
-    <td className="px-5 py-5 text-center text-[15px]">
+    <td className="px-7 py-5 text-center text-[15px]">
       {children}
     </td>
   );
