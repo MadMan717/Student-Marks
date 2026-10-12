@@ -1,4 +1,5 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const app = express();
 const cors = require('cors');
 const dns=require("dns");
@@ -8,7 +9,8 @@ dns.setServers([
 ])
 require('dotenv').config();
 const mongoose=require('mongoose');
-const Student=require("./Student.js");
+const Biodata=require("./biodata.js");
+const marks=require("./marks.js");
 const Admin=require("./admin.js");
 const connectDB = async () => {
   try {
@@ -27,16 +29,55 @@ app.post("/login",async(req,res)=>{
   const username=req.body.username;
   const password=req.body.password;
   const admin=await Admin.findOne({username:username});
-    if(admin.username===username && admin.password===password) {
-      res.json(true);
+    if(admin.username===username && admin.password===password){
+      const token=jwt.sign(
+      { username: username },
+      process.env.JWT_SECRET,
+      { expiresIn: "1w" }
+    );
+    res.json({token});
     }else{
       res.json(false);
     }
 })
+function authenticate(req,res,next){
+   const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ message: "No token" });
+  }
+  try {
+    const user = jwt.verify(token,process.env.JWT_SECRET);
+    req.user=user;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+
+}
+
+
 
 app.get("/students", async (req, res) => {
-  const students=await Student.find();
-  res.json(students);
+  const students = await Biodata.find();
+  const allMarks = await Marksdata.find();
+
+  const result = students.map((student) => {
+    const studentMarks = allMarks.find(
+      (mark) => mark.rollNo === student.rollNo
+    );
+
+    return {
+      ...student.toObject(),
+      math: studentMarks?.math ?? 0,
+      english: studentMarks?.english ?? 0,
+      science: studentMarks?.science ?? 0,
+      social: studentMarks?.social ?? 0,
+      computer: studentMarks?.computer ?? 0
+    };
+  });
+
+  res.json(result);
 });
 
 app.post("/add-students", async (req, res)=> {

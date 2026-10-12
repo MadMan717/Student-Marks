@@ -108,39 +108,53 @@ function getPerformer(students){
 
 
 function App() {
-const[user,setuser]=useState(false);
+const[user,setuser]=useState( localStorage.getItem("token") ? true : false);
 const[students, setStudents] = useState([]);
 const [activePage, setActivePage] = useState("dashboard");
 const [currentStudent,setCurrentStudent]=useState();
+const token=localStorage.getItem("token");
 useEffect(() => {
-  console.log(fetch("http://localhost:5000/students"));
-  fetch("http://localhost:5000/students")
+  if (!user) return;
+
+  fetch("http://localhost:5000/students",{
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`
+  }})
+  
     .then(res=>(res.json()))
     .then(data=>setStudents(data));
-},[]);
+},[user]);
 
 
 function LoginCheck(username,password){
     fetch("http://localhost:5000/login", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+       Authorization: `Bearer ${localStorage.getItem("token")}`    
     },
-    body: JSON.stringify({
+    body:JSON.stringify({
       username:username,
       password:password
     })
   })
     .then(res => res.json())
     .then(data => {
-      setuser(data);
+      if (data.token) {
+    localStorage.setItem("token", data.token);
+    setuser(true);
+  } else {
+    alert("Invalid username or password");
+  }
     });
 
 }
 if(!user){
   return <Login LoginCheck={LoginCheck}/>;
 }
-function Logout() {
+function Logout(){
+  localStorage.removeItem("token");
   setuser(false);
 }
    let pageContent;
@@ -449,6 +463,8 @@ function StudentsPage({students,setStudents,setActivePage,setCurrentStudent}) {
     const [rollNo, setRollNo]=useState("");
     const [grade, setGrade]=useState("");
     const [showAddStudent, setShowAddStudent]=useState(false);
+    const [emailError,setEmailError]=useState("");
+    const [rollNoError,setRollNoError]=useState("");
 
 
 
@@ -559,9 +575,7 @@ function AddStudent() {
                     <td className="px-5 py-7 text-[16px] text-slate-500">
 
                       {student.email ||
-                        `${student.name
-                          .toLowerCase()
-                          .replace(" ", ".")}@school.com`}
+                        student.name}
                     </td>
                     <td className="px-5 py-7 text-[16px]">
                       {student.grade}
@@ -603,13 +617,10 @@ function AddStudent() {
 
           {showAddStudent && (
             <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-[100px]">
-
               <div className="w-[650px] rounded-2xl bg-white p-9 shadow-2xl">
-
                 <h2 className="mb-8 text-[30px] font-normal">
                   Add New Student
                 </h2>
-
 
                 <div className="space-y-6">
 
@@ -631,38 +642,39 @@ function AddStudent() {
 
 
                   <div>
-
                     <label className="mb-3 block text-[18px]">
                       Email
                     </label>
 
                     <input
                       type="email"
-                      placeholder="student@school.com"
+                      placeholder="student@gmail.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+
+                        if (!e.target.value.endsWith("@gmail.com")) {
+                          setEmailError("Please enter a valid Gmail address");
+                        } else {
+                          setEmailError("");
+                        }
+                      }}
                       className="w-full rounded-xl border border-slate-200 px-6 py-5 text-[18px] outline-none focus:border-gray-400"
                     />
 
-                  </div>
+                    {emailError && (
+                      <p className="mt-2 text-sm text-red-600">
+                        {emailError}
+                      </p>
+                    )}
+                    </div>
 
 
-                  <div>
-
-                    <label className="mb-3 block text-[18px]">
-                      Roll Number
-                    </label>
-
-                    <input
-                      type="text"
-                      placeholder="A001"
-                      value={rollNo}
-                      onChange={(e) => setRollNo(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 px-6 py-5 text-[18px] outline-none focus:border-slate-400"
-                    />
-
-                  </div>
-
+                  <div> 
+                    <label className="mb-3 block text-[18px]"> Roll Number </label> 
+                    <input type="text" placeholder="A001" value={rollNo} maxLength={4} onChange={(e) => { const value = e.target.value.toUpperCase(); setRollNo(value); if (!/^[A-Z][0-9]{3}$/.test(value))
+                       { setRollNoError("Roll Number must be like A001"); } else { setRollNoError(""); } }}
+                        className="w-full rounded-xl border border-slate-200 px-6 py-5 text-[18px] outline-none focus:border-slate-400" /> {rollNoError && ( <p className="mt-2 text-sm text-red-600"> {rollNoError} </p> )} </div>
 
                   <div>
 
@@ -670,13 +682,24 @@ function AddStudent() {
                       Class
                     </label>
 
-                    <input
-                      type="text"
-                      placeholder="10th Grade"
+                    <select
                       value={grade}
                       onChange={(e) => setGrade(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 px-6 py-5 text-[18px] outline-none focus:border-slate-400"
-                    />
+                      className="w-full rounded-xl border border-white-200 px-6 py-5 text-[18px] outline-none focus:border-gray-400">
+                      <option value="">Select Grade</option>
+                      <option value="1st Grade">1st Grade</option>
+                      <option value="2nd Grade">2nd Grade</option>
+                      <option value="3rd Grade">3rd Grade</option>
+                      <option value="4th Grade">4th Grade</option>
+                      <option value="5th Grade">5th Grade</option>
+                      <option value="6th Grade">6th Grade</option>
+                      <option value="7th Grade">7th Grade</option>
+                      <option value="8th Grade">8th Grade</option>
+                      <option value="9th Grade">9th Grade</option>
+                      <option value="10th Grade">10th Grade</option>
+                      <option value="11th Grade">11th Grade</option>
+                      <option value="12th Grade">12th Grade</option>
+                    </select>
                   </div>
 
                 </div>
@@ -713,19 +736,47 @@ function AddStudent() {
 
   }
 function UpdateMarksPage({currentStudent,setCurrentStudent,setStudents,setActivePage}) {
- function UpdateMarks() {
-  fetch("http://localhost:5000/update-marks", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(currentStudent)
-  })
-    .then(res => res.json())
-    .then(data => {
-      setStudents(data);
-      setActivePage("students");
+ 
+async function UpdateMarks() {
+  try {
+    const res = await fetch("http://localhost:5000/update-marks", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(currentStudent)
     });
+
+    const text = await res.text();
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error("Server response:", text);
+      alert("Update failed. Check the backend terminal.");
+      return;
+    }
+
+    if (!res.ok) {
+      console.error("Update marks error:", data);
+      alert(data.message || "Failed to update marks");
+      return;
+    }
+
+    if (!Array.isArray(data)) {
+      console.error("Unexpected response:", data);
+      alert("The server did not return a student list.");
+      return;
+    }
+
+    setStudents(data);
+    setActivePage("students");
+
+  } catch (error) {
+    console.error("Update marks error:", error);
+    alert("Could not update marks. Please try again.");
+  }
 }
 
   return (
@@ -866,8 +917,6 @@ function UpdateMarksPage({currentStudent,setCurrentStudent,setStudents,setActive
 
     </div>
   );
-
-
 }
 
 function EditProfile({currentStudent,setCurrentStudent,setStudents,setActivePage}){
