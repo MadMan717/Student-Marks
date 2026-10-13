@@ -10,7 +10,7 @@ dns.setServers([
 require('dotenv').config();
 const mongoose=require('mongoose');
 const Biodata=require("./biodata.js");
-const marks=require("./marks.js");
+const Marksdata=require("./marks.js");
 const Admin=require("./admin.js");
 const connectDB = async () => {
   try {
@@ -69,58 +69,155 @@ app.get("/students", async (req, res) => {
 
     return {
       ...student.toObject(),
-      math: studentMarks?.math ?? 0,
-      english: studentMarks?.english ?? 0,
-      science: studentMarks?.science ?? 0,
-      social: studentMarks?.social ?? 0,
-      computer: studentMarks?.computer ?? 0
+      math: studentMarks?.math,
+      english: studentMarks?.english,
+      science: studentMarks?.science,
+      social: studentMarks?.social,
+      computer: studentMarks?.computer 
     };
   });
 
   res.json(result);
 });
 
-app.post("/add-students", async (req, res)=> {
-  const newStudent = req.body;
-  const student = new Student(newStudent);
-  await student.save();
-  return res.json(student);
+app.post("/add-students", async (req, res) => {
+    const newStudent = req.body;
+    const student = await Biodata.create({
+      rollNo: newStudent.rollNo,
+      name: newStudent.name,
+      email: newStudent.email,
+      grade: newStudent.grade
+    });
+    await Marksdata.create({
+      rollNo: newStudent.rollNo,
+      math: newStudent.math ?? 0,
+      english: newStudent.english ?? 0,
+      science: newStudent.science ?? 0,
+      social: newStudent.social ?? 0,
+      computer: newStudent.computer ?? 0
+    });
+
+    res.json(student);
 });
+
 
 app.put("/update-marks", async (req, res) => {
-  const updatedmarks=req.body;
-  const studentRollNo=updatedmarks.rollNo;
-  const student=await Student.findOne({rollNo:studentRollNo});
-  student.math=updatedmarks.math;
-  student.english=updatedmarks.english;
-  student.science=updatedmarks.science;
-  student.social=updatedmarks.social;
-  student.computer=updatedmarks.computer;
-  await student.save();
-  const students = await Student.find();
-  res.json(students);
+    const updatedmarks = req.body;
+    const rollNo = updatedmarks.rollNo;
+    await Marksdata.findOneAndUpdate(
+      { rollNo: rollNo },
+      {
+        $set: {
+          math: updatedmarks.math,
+          english: updatedmarks.english,
+          science: updatedmarks.science,
+          social: updatedmarks.social,
+          computer: updatedmarks.computer
+        }
+      },
+      { new: true, upsert: true }
+    );
+    const students = await Biodata.find();
+    const allMarks = await Marksdata.find();
+    const result = students.map((student) => {
+      const studentMarks = allMarks.find(
+        (mark) => mark.rollNo === student.rollNo
+      );
+
+      return {
+        ...student.toObject(),
+        math: studentMarks?.math,
+        english: studentMarks?.english,
+        science: studentMarks?.science ,
+        social: studentMarks?.social ,
+        computer: studentMarks?.computer
+      };
+    });
+    res.json(result);
 });
 
-app.put("/edit-student",async (req, res) => {
-  const updatedStudent= req.body;
-  const RollNoStudent=updatedStudent.rollNo;
-  const student=await Student.findOne({rollNo:RollNoStudent});
-  student.name=updatedStudent.name;
-  student.email=updatedStudent.email;
-  student.social=updatedStudent.social;
-  student.grade =updatedStudent.grade;
-  await student.save();
-  const students=await Student.find();
-  res.json(students);
+
+
+app.put("/edit-student", async (req, res) => {
+  try {
+    const updatedStudent = req.body;
+    const rollNo = updatedStudent.rollNo;
+
+    await Biodata.findOneAndUpdate(
+      { rollNo: rollNo },
+      {
+        name: updatedStudent.name,
+        email: updatedStudent.email,
+        grade: updatedStudent.grade
+      }
+    );
+
+    await Marksdata.findOneAndUpdate(
+      { rollNo: rollNo },
+      {
+        social: updatedStudent.social
+      }
+    );
+
+    const students = await Biodata.find();
+    const allMarks = await Marksdata.find();
+
+    const result = students.map((student) => {
+      const studentMarks = allMarks.find(
+        (mark) => mark.rollNo === student.rollNo
+      );
+
+      return {
+        ...student.toObject(),
+        math: studentMarks?.math ?? 0,
+        english: studentMarks?.english ?? 0,
+        science: studentMarks?.science ?? 0,
+        social: studentMarks?.social ?? 0,
+        computer: studentMarks?.computer ?? 0
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to edit student" });
+  }
 });
+
+
 
 app.delete("/delete-student", async (req, res) => {
-  const updatedstudents = req.body;
-  const studentRollNo=updatedstudents.rollNo;
-  await Student.findOneAndDelete({rollNo:studentRollNo});
-  const students = await Student.find();
-  res.json(students);
+  try {
+    const studentRollNo = req.body.rollNo;
+
+    await Biodata.findOneAndDelete({ rollNo: studentRollNo });
+    await Marksdata.findOneAndDelete({ rollNo: studentRollNo });
+
+    const students = await Biodata.find();
+    const allMarks = await Marksdata.find();
+
+    const result = students.map((student) => {
+      const studentMarks = allMarks.find(
+        (mark) => mark.rollNo === student.rollNo
+      );
+
+      return {
+        ...student.toObject(),
+        math: studentMarks?.math ?? 0,
+        english: studentMarks?.english ?? 0,
+        science: studentMarks?.science ?? 0,
+        social: studentMarks?.social ?? 0,
+        computer: studentMarks?.computer ?? 0
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to delete student" });
+  }
 });
+
 
 app.listen(5000, () => {
   console.log("Server running on port 5000");
